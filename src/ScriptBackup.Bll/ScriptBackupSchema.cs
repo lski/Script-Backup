@@ -93,10 +93,10 @@ namespace ScriptBackup.Bll {
 				conn = new ServerConnection(sqlServer);
 
 				var svr = new Server(conn);
-				var scr = new Scripter(svr) {
-					Options = _scriptOptions
-				};
 				var walker = new DependencyWalker(svr);
+				var scr = new Scripter(svr) {
+					Options = ops
+				};
 
 				var dbs = ResolveDatabases(svr, databases);
 
@@ -130,21 +130,21 @@ namespace ScriptBackup.Bll {
 						objects.AddRange(ResolvePartitionSchemes(db));
 					}
 
-					IEnumerable<Mini> orderedLst = null;
+					IEnumerable<SqlSmoObjectMeta> orderedLst = null;
 
-					if (true) {
+					if (!Options.EnforceDependencies) {
 
-						orderedLst = objects.Select(obj => new Mini() {
+						orderedLst = objects.Select(obj => new SqlSmoObjectMeta() {
 							Name = obj.Urn.GetAttribute("Name"),
 							Type = obj.Urn.Type,
 							SmoObject = obj
 						});
 					} else {
 
-						var tree = scr.DiscoverDependencies(objects.ToArray(), false);
+						var tree = scr.DiscoverDependencies(objects.ToArray(), true);
 						var coll = walker.WalkDependencies(tree).ToList();
 
-						orderedLst = coll.Select(dep => new Mini() {
+						orderedLst = coll.Select(dep => new SqlSmoObjectMeta() {
 							Name = dep.Urn.GetAttribute("Name"),
 							Type = dep.Urn.Type,
 							SmoObject = svr.GetSmoObject(dep.Urn)
@@ -155,7 +155,6 @@ namespace ScriptBackup.Bll {
 						ProcessScript(scr, db.Name, mini, iterator);
 					}
 				}
-
 			} finally {
 
 				if (conn != null) {
@@ -164,7 +163,7 @@ namespace ScriptBackup.Bll {
 			}
 		}
 
-		private class Mini {
+		private class SqlSmoObjectMeta {
 
 			public string Name { get; set; }
 
@@ -173,7 +172,7 @@ namespace ScriptBackup.Bll {
 			public SqlSmoObject SmoObject { get; set; }
 		}
 
-		private void ProcessScript(Scripter scr, string db, Mini data, Action<string, string, string, string> iterator) {
+		private void ProcessScript(Scripter scr, string db, SqlSmoObjectMeta data, Action<string, string, string, string> iterator) {
 
 			var name = data.SmoObject.Urn.GetAttribute("Name");
 			var type = data.SmoObject.Urn.Type;
@@ -216,60 +215,6 @@ namespace ScriptBackup.Bll {
 			iterator(sb.ToString(), db.Name, db.Name, typeof(Database).Name);
 		}
 
-		//public void Process(Action<string, string, string, string> iterator) {
-
-		//	var sqlServer = Options.ServerName;
-		//	var ops = _scriptOptions;
-		//	var databases = _options.Databases;
-		//	var tables = _options.Tables;
-
-		//	ServerConnection conn = null;
-
-		//	try {
-
-		//		conn = new ServerConnection(sqlServer);
-
-		//		var svr = new Server(conn);
-
-		//		var dbs = ResolveDatabases(svr, databases);
-
-		//		foreach (Database db in dbs) {
-
-		//			if (Options.CreateDatabase) {
-		//				ProcessDatabaseScript(db, iterator);
-		//			}
-
-		//			if (Options.ScriptTables) {
-		//				ProcessTablesScript(ops, db, ResolveTables(db, tables), iterator);
-		//			}
-
-		//			if (Options.ScriptProcedures) {
-		//				ProcessProceduresScript(ops, db, ResolveProcedures(db), iterator);
-		//			}
-
-		//			if (Options.ScriptUdfs) {
-		//				ProcessUdfsScript(ops, db, ResolveUDFs(db), iterator);
-		//			}
-
-		//			if (Options.ScriptViews) {
-		//				ProcessViewsScript(ops, db, ResolveViews(svr, db), iterator);
-		//			}
-
-		//			if (Options.ScriptPartitionFunctions) {
-		//				ProcessPartitionFunctionsScript(ops, db, ResolvePartitionFunctions(db), iterator);
-		//			}
-
-		//			if (Options.ScriptPartitionSchemes) {
-		//				ProcessPartitionSchemesScript(ops, db, ResolvePartitionSchemes(db), iterator);
-		//			}
-		//		}
-		//	} finally {
-
-		//		if (conn != null) {
-		//			conn.Disconnect();
-		//		}
-		//	}
-		//}
 		private IEnumerable<PartitionScheme> ResolvePartitionSchemes(Database db) {
 
 			if (db.CompatibilityLevel <= CompatibilityLevel.Version80) {

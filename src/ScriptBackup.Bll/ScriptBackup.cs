@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 
 namespace ScriptBackup.Bll {
 
@@ -19,11 +20,9 @@ namespace ScriptBackup.Bll {
 
 		public void Export(string outputFile) {
 
-			// TODO: Do some refactoring
+			outputFile = ResolveOutputFile(outputFile);
 
-			Console.WriteLine("Schema");
 			_scriptBackupSchema.Export(outputFile);
-			Console.WriteLine("Data");
 			_scriptBackupData.Export(outputFile);
 		}
 
@@ -31,6 +30,23 @@ namespace ScriptBackup.Bll {
 
 			_scriptBackupSchema.Process(iterator);
 			_scriptBackupData.Process(iterator);
+		}
+
+		private string ResolveOutputFile(string outputFile) {
+
+			var reg = "{3([^}]*)?}";
+			var matches = Regex.Match(outputFile, reg);
+
+			// If there was a match attempt to replace the date format position
+			if (matches.Success) {
+
+				var format = String.IsNullOrEmpty(matches.Groups[1].Value) ? "{0}" : "{0" + matches.Groups[1].Value + "}";
+				var newValue = String.Format(format, DateTime.Now);
+
+				outputFile = Regex.Replace(outputFile, reg, newValue);
+			}
+
+			return outputFile;
 		}
 	}
 }

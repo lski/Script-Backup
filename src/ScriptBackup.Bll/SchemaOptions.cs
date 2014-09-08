@@ -12,6 +12,7 @@ namespace ScriptBackup.Bll {
 			ScriptViews = true;
 			ScriptProcedures = true;
 			ScriptUdfs = true;
+			EnforceDependencies = true;
 		}
 
 		public string ServerName { get; set; }
@@ -33,5 +34,7 @@ namespace ScriptBackup.Bll {
 		public IEnumerable<string> Databases { get; set; }
 
 		public IEnumerable<string> Tables { get; set; }
+
+		public bool EnforceDependencies { get; set; }
 	}
 }
