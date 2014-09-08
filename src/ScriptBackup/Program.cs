@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
 using System.Linq;
 
 namespace ScriptBackup.Bll {
 
-	class Program {
+	internal class Program {
 
-		static void Main(string[] args) {
+		private static void Main(string[] args) {
 
 			string type = null;
 			string server = null;
@@ -78,12 +76,12 @@ namespace ScriptBackup.Bll {
 			backup.Export(output);
 		}
 
-		static void WriteFullMessage(params string[] messages) {
+		private static void WriteFullMessage(params string[] messages) {
 
 			foreach (var mess in messages) {
 				Console.WriteLine(mess);
 			}
-			
+
 			Console.WriteLine("Press any key to continue");
 			Console.ReadLine();
 		}

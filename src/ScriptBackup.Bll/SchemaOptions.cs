@@ -12,7 +12,6 @@ namespace ScriptBackup.Bll {
 			ScriptViews = true;
 			ScriptProcedures = true;
 			ScriptUdfs = true;
-
 		}
 
 		public string ServerName { get; set; }

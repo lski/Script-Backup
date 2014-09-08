@@ -126,12 +126,10 @@ namespace ScriptBackup.Bll {
 						ProcessPartitionSchemesScript(ops, db, ResolvePartitionSchemes(db), iterator);
 					}
 				}
-
-			}
-			finally {
+			} finally {
 
 				if (conn != null) {
-					conn.Disconnect();				
+					conn.Disconnect();
 				}
 			}
 		}

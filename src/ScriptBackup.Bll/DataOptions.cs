@@ -9,7 +9,8 @@ namespace ScriptBackup.Bll {
 			ServerName = serverName;
 		}
 
-		public DataOptions(IBackupOptions options) : this(options.ServerName) {
+		public DataOptions(IBackupOptions options)
+			: this(options.ServerName) {
 
 			Databases = options.Databases;
 			Tables = options.Tables;

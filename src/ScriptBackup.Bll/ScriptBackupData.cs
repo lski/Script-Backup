@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.SqlServer.Management.Common;
+﻿using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 using System;
 using System.IO;
@@ -90,9 +89,7 @@ namespace ScriptBackup.Bll {
 						}
 					}
 				}
-
-			} 
-			finally {
+			} finally {
 
 				if (conn != null) {
 					conn.Disconnect();
