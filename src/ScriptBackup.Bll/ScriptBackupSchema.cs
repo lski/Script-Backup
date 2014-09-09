@@ -30,44 +30,42 @@ namespace ScriptBackup.Bll {
 			_options = options;
 
 			_scriptOptions = new ScriptingOptions() {
-				Default = true,
-				ScriptSchema = true,
-				NonClusteredIndexes = true,
-				WithDependencies = false,
-				Triggers = true,
-				TargetServerVersion = SqlServerVersion.Version110,
-				ScriptDrops = false,
-				Indexes = true,
+				AllowSystemObjects = false,
+				AnsiPadding = true,
 				ClusteredIndexes = true,
+				Default = true,
+				DriAllConstraints = true,
+				DriAllKeys = true,
+				DriChecks = true,
+				DriForeignKeys = true,
+				DriIncludeSystemNames = true,
+				DriPrimaryKey = true,
+				IncludeDatabaseContext = false,
+				IncludeIfNotExists = false,
+				Indexes = true,
+				NoCollation = true,
+				NoFileGroup = false,
+				NoIndexPartitioningSchemes = false,
+				NonClusteredIndexes = true,
 				PrimaryObject = true,
 				SchemaQualify = true,
-				NoIndexPartitioningSchemes = false,
-				NoFileGroup = false,
-				DriPrimaryKey = true,
-				DriChecks = true,
-				DriAllKeys = true,
-				AllowSystemObjects = false,
-				IncludeIfNotExists = false,
-				DriForeignKeys = true,
-				DriAllConstraints = true,
-				DriIncludeSystemNames = true,
-				AnsiPadding = true,
-				IncludeDatabaseContext = false,
-				//EnforceScriptingOptions = true,
-				//IncludeHeaders = true,
-				//include statistics and histogram data for db clone
-				//OptimizerData = true,
-				//Statistics = true
+				ScriptDrops = false,
+				ScriptSchema = true,
+				TargetServerVersion = SqlServerVersion.Version110,
+				Triggers = true,
+				WithDependencies = false,
 			};
 		}
 
 		public void Export(string outputFile) {
 
 			var startTime = DateTime.Now;
+			var svr = _options.ServerName;
+			var outputType = "schema";
 
 			Process((output, db, objectName, objectType) => {
 
-				var file = new FileInfo(String.Format(outputFile, db, objectName, objectType, startTime));
+				var file = new FileInfo(String.Format(outputFile, svr, db, objectName, objectType, startTime, outputType));
 
 				if (file.Directory != null && !file.Directory.Exists) {
 					file.Directory.Create();
@@ -130,6 +128,8 @@ namespace ScriptBackup.Bll {
 						objects.AddRange(ResolvePartitionSchemes(db));
 					}
 
+					
+
 					IEnumerable<SqlSmoObjectMeta> orderedLst = null;
 
 					if (!Options.EnforceDependencies) {
@@ -139,7 +139,13 @@ namespace ScriptBackup.Bll {
 							Type = obj.Urn.Type,
 							SmoObject = obj
 						});
+
 					} else {
+
+						// Empty so prevents dependency errors
+						if (!objects.Any()) {
+							continue;
+						}
 
 						var tree = scr.DiscoverDependencies(objects.ToArray(), true);
 						var coll = walker.WalkDependencies(tree).ToList();
@@ -176,11 +182,11 @@ namespace ScriptBackup.Bll {
 
 			var name = data.SmoObject.Urn.GetAttribute("Name");
 			var type = data.SmoObject.Urn.Type;
-			var obj = data.SmoObject;
+			var url = data.SmoObject;
 
 			Console.WriteLine(type + ": " + name);
 
-			var output = scr.Script(new[] { obj });
+			var output = scr.Script(new[] { url });
 
 			var sb = new StringBuilder();
 

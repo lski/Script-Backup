@@ -27,23 +27,26 @@ namespace ScriptBackup.Bll {
 			_options = options;
 
 			_scriptOptions = new ScriptingOptions() {
+				AnsiPadding = true,
 				Default = true,
+				NoCollation = true,
 				ScriptData = true,
 				ScriptSchema = false,
 				ScriptDrops = false,
+				TargetServerVersion = SqlServerVersion.Version110,
 				WithDependencies = false,
-				AnsiPadding = true,
-				TargetServerVersion = SqlServerVersion.Version110
 			};
 		}
 
 		public void Export(string outputFile) {
 
 			var startTime = DateTime.Now;
+			var svr = _options.ServerName;
+			var outputType = "data";
 
 			Process((output, db, objectName, objectType) => {
 
-				var file = new FileInfo(String.Format(outputFile, db, objectName, objectType, startTime));
+				var file = new FileInfo(String.Format(outputFile, svr, db, objectName, objectType, startTime, outputType));
 
 				if (file.Directory != null && !file.Directory.Exists) {
 					file.Directory.Create();

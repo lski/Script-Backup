@@ -5,6 +5,8 @@ namespace ScriptBackup.Bll {
 
 	public class ScriptBackup : IScriptBackup {
 
+		internal const int FormatPositionStartTime = 4;
+
 		private readonly ScriptBackupSchema _scriptBackupSchema;
 		private readonly ScriptBackupData _scriptBackupData;
 
@@ -34,7 +36,7 @@ namespace ScriptBackup.Bll {
 
 		private string ResolveOutputFile(string outputFile) {
 
-			var reg = "{3([^}]*)?}";
+			var reg = "{" + FormatPositionStartTime + "([^}]*)?}";
 			var matches = Regex.Match(outputFile, reg);
 
 			// If there was a match attempt to replace the date format position
