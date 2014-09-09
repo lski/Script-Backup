@@ -140,24 +140,15 @@ namespace ScriptBackup.Bll {
 			}
 		}
 
-		private class SqlSmoObjectMeta {
-
-			public string Name { get; set; }
-
-			public string Type { get; set; }
-
-			public SqlSmoObject SmoObject { get; set; }
-		}
-
 		private void ProcessScript(Scripter scr, string db, SqlSmoObjectMeta data, Action<string, string, string, string> iterator) {
 
-			var name = data.SmoObject.Urn.GetAttribute("Name");
-			var type = data.SmoObject.Urn.Type;
-			var url = data.SmoObject;
+			var name = data.Name;		// .SmoObject.Urn.GetAttribute("Name");
+			var type = data.Type;		// .SmoObject.Urn.Type;
+			var urn = data.SmoObject;
 
 			Console.WriteLine(type + ": " + name);
 
-			var output = scr.Script(new[] { url });
+			var output = scr.Script(new[] { urn });
 
 			var sb = new StringBuilder();
 
