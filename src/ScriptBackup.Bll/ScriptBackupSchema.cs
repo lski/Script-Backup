@@ -10,7 +10,8 @@ namespace ScriptBackup.Bll {
 
 	public class ScriptBackupSchema : ScriptBackupBase, IScriptBackup {
 
-		private readonly ScriptingOptions _scriptOptions;
+		const string OutputType = "schema";
+
 		private readonly SchemaOptions _options;
 
 		public SchemaOptions Options {
@@ -28,44 +29,16 @@ namespace ScriptBackup.Bll {
 			}
 
 			_options = options;
-
-			_scriptOptions = new ScriptingOptions() {
-				AllowSystemObjects = false,
-				AnsiPadding = true,
-				ClusteredIndexes = true,
-				Default = true,
-				DriAllConstraints = true,
-				DriAllKeys = true,
-				DriChecks = true,
-				DriForeignKeys = true,
-				DriIncludeSystemNames = true,
-				DriPrimaryKey = true,
-				IncludeDatabaseContext = false,
-				IncludeIfNotExists = false,
-				Indexes = true,
-				NoCollation = true,
-				NoFileGroup = false,
-				NoIndexPartitioningSchemes = false,
-				NonClusteredIndexes = true,
-				PrimaryObject = true,
-				SchemaQualify = true,
-				ScriptDrops = false,
-				ScriptSchema = true,
-				TargetServerVersion = SqlServerVersion.Version110,
-				Triggers = true,
-				WithDependencies = false,
-			};
 		}
 
 		public void Export(string outputFile) {
 
 			var startTime = DateTime.Now;
 			var svr = _options.ServerName;
-			var outputType = "schema";
 
 			Process((output, db, objectName, objectType) => {
 
-				var file = new FileInfo(String.Format(outputFile, svr, db, objectName, objectType, startTime, outputType));
+				var file = new FileInfo(String.Format(outputFile, svr, db, objectName, objectType, startTime, OutputType));
 
 				if (file.Directory != null && !file.Directory.Exists) {
 					file.Directory.Create();
@@ -80,7 +53,7 @@ namespace ScriptBackup.Bll {
 		public void Process(Action<string, string, string, string> iterator) {
 
 			var sqlServer = Options.ServerName;
-			var ops = _scriptOptions;
+			var ops = _options.ScriptingOptions;
 			var databases = _options.Databases;
 			var tables = _options.Tables;
 
@@ -127,8 +100,6 @@ namespace ScriptBackup.Bll {
 					if (Options.ScriptPartitionSchemes) {
 						objects.AddRange(ResolvePartitionSchemes(db));
 					}
-
-					
 
 					IEnumerable<SqlSmoObjectMeta> orderedLst = null;
 
@@ -202,23 +173,38 @@ namespace ScriptBackup.Bll {
 
 			Console.WriteLine("Database: " + db.Name);
 
-			var dbOutput = db.Script(new ScriptingOptions() {
-				NoFileGroup = true,
-				TargetServerVersion = _scriptOptions.TargetServerVersion
-			});
-
+			var ops = _options;
 			var sb = new StringBuilder();
 
-			foreach (string st in dbOutput) {
+			if (ops.CreateDatabase != SchemaOptions.CreateDatabaseType.none) {
 
-				sb.AppendLine(st);
+				if (ops.CreateDatabase == SchemaOptions.CreateDatabaseType.mini) {
+					sb.Append("Create Database ").Append("[").Append(db.Name).AppendLine("]");
+					sb.AppendLine("GO");
+				}
+				else {
+				
+					var dbOutput = db.Script(new ScriptingOptions() {
+						NoFileGroup = true,
+						TargetServerVersion = _options.ScriptingOptions.TargetServerVersion
+					});
+
+					foreach (string st in dbOutput) {
+
+						sb.AppendLine(st);
+						sb.AppendLine("GO");
+					}
+				}
+			}
+
+			if (ops.UseDatabase) {
+				sb.Append("Use ").Append("[").Append(db.Name).AppendLine("]");
 				sb.AppendLine("GO");
 			}
 
-			sb.Append("Use ").Append("[").Append(db.Name).AppendLine("]");
-			sb.AppendLine("GO");
-
-			iterator(sb.ToString(), db.Name, db.Name, typeof(Database).Name);
+			if (sb.Length > 0) {
+				iterator(sb.ToString(), db.Name, db.Name, typeof(Database).Name);
+			}
 		}
 
 		private IEnumerable<PartitionScheme> ResolvePartitionSchemes(Database db) {

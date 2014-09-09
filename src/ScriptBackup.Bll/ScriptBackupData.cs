@@ -1,4 +1,5 @@
-﻿using Microsoft.SqlServer.Management.Common;
+﻿using System.Text;
+using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 using System;
 using System.IO;
@@ -7,7 +8,8 @@ namespace ScriptBackup.Bll {
 
 	public class ScriptBackupData : ScriptBackupBase, IScriptBackup {
 
-		private readonly ScriptingOptions _scriptOptions;
+		const string OutputType = "data";
+
 		private readonly DataOptions _options;
 
 		public DataOptions Options {
@@ -25,28 +27,16 @@ namespace ScriptBackup.Bll {
 			}
 
 			_options = options;
-
-			_scriptOptions = new ScriptingOptions() {
-				AnsiPadding = true,
-				Default = true,
-				NoCollation = true,
-				ScriptData = true,
-				ScriptSchema = false,
-				ScriptDrops = false,
-				TargetServerVersion = SqlServerVersion.Version110,
-				WithDependencies = false,
-			};
 		}
 
 		public void Export(string outputFile) {
 
 			var startTime = DateTime.Now;
 			var svr = _options.ServerName;
-			var outputType = "data";
-
+			
 			Process((output, db, objectName, objectType) => {
 
-				var file = new FileInfo(String.Format(outputFile, svr, db, objectName, objectType, startTime, outputType));
+				var file = new FileInfo(String.Format(outputFile, svr, db, objectName, objectType, startTime, OutputType));
 
 				if (file.Directory != null && !file.Directory.Exists) {
 					file.Directory.Create();
@@ -61,7 +51,7 @@ namespace ScriptBackup.Bll {
 		public void Process(Action<string, string, string, string> iterator) {
 
 			var sqlServer = _options.ServerName;
-			var ops = _scriptOptions;
+			var ops = _options.ScriptingOptions;
 			var databases = _options.Databases;
 			var tables = _options.Tables;
 
@@ -77,7 +67,7 @@ namespace ScriptBackup.Bll {
 
 				foreach (Database db in dbs) {
 
-					Console.WriteLine("Database: " + db.Name);
+					ProcessDatabaseScript(db, iterator);
 
 					var tabs = ResolveTables(db, tables);
 
@@ -92,11 +82,29 @@ namespace ScriptBackup.Bll {
 						}
 					}
 				}
+
 			} finally {
 
 				if (conn != null) {
 					conn.Disconnect();
 				}
+			}
+		}
+
+		private void ProcessDatabaseScript(Database db, Action<string, string, string, string> iterator) {
+
+			Console.WriteLine("Database: " + db.Name);
+
+			var ops = _options;
+			var sb = new StringBuilder();
+
+			if (ops.UseDatabase) {
+				sb.Append("Use ").Append("[").Append(db.Name).AppendLine("]");
+				sb.AppendLine("GO");
+			}
+
+			if (sb.Length > 0) {
+				iterator(sb.ToString(), db.Name, db.Name, typeof(Database).Name);
 			}
 		}
 	}

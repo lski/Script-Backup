@@ -25,6 +25,9 @@ namespace ScriptBackup.Bll {
 			outputFile = ResolveOutputFile(outputFile);
 
 			_scriptBackupSchema.Export(outputFile);
+
+			// If the output is not split on the output type, then remove the need for the UseDatabase from the data section as it should be in the same file
+			_scriptBackupData.Options.UseDatabase = !(outputFile.Contains("{5"));
 			_scriptBackupData.Export(outputFile);
 		}
 

@@ -6,6 +6,8 @@ namespace ScriptBackup.Bll {
 
 		string ServerName { get; set; }
 
+		bool UseDatabase { get; set; }
+
 		IEnumerable<string> Databases { get; set; }
 
 		IEnumerable<string> Tables { get; set; }
