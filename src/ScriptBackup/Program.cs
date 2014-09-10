@@ -12,19 +12,21 @@ namespace ScriptBackup.Bll {
 			string server = null;
 			string output = null;
 			string[] dbs = null;
+			bool silent = false;
 
 			type = (from arg in args where arg.StartsWith("-type:") select arg.Replace("-type:", "")).FirstOrDefault() ?? "all";
 			server = (from arg in args where arg.StartsWith("-server:") select arg.Replace("-server:", "")).FirstOrDefault();
 			output = (from arg in args where arg.StartsWith("-output:") select arg.Replace("-output:", "")).FirstOrDefault();
 			dbs = (from arg in args where arg.StartsWith("-dbs:") select arg.Replace("-dbs:", "").Split(',')).FirstOrDefault();
+			silent = args.Contains("-silent");
 
 			if (String.IsNullOrEmpty(server)) {
-				WriteFullMessage("The server argument is required");
+				WriteMultipleLines("The server argument is required");
 				return;
 			}
 
 			if (String.IsNullOrEmpty(output)) {
-				WriteFullMessage("The output argument is required");
+				WriteMultipleLines("The output argument is required");
 				return;
 			}
 
@@ -42,7 +44,10 @@ namespace ScriptBackup.Bll {
 					break;
 			}
 
-			WriteFullMessage("");
+			if (!silent) {
+				WriteMultipleLines("", "Press any key to continue");
+				Console.ReadLine();
+			}
 		}
 
 		private static void All(string server, string output, IEnumerable<string> dbs) {
@@ -76,14 +81,11 @@ namespace ScriptBackup.Bll {
 			backup.Export(output);
 		}
 
-		private static void WriteFullMessage(params string[] messages) {
+		private static void WriteMultipleLines(params string[] messages) {
 
 			foreach (var mess in messages) {
 				Console.WriteLine(mess);
 			}
-
-			Console.WriteLine("Press any key to continue");
-			Console.ReadLine();
 		}
 	}
 }
