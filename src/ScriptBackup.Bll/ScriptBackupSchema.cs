@@ -145,11 +145,11 @@ namespace ScriptBackup.Bll {
 
 			var name = data.Name;		// .SmoObject.Urn.GetAttribute("Name");
 			var type = data.Type;		// .SmoObject.Urn.Type;
-			var urn = data.SmoObject;
+			var smoObj = data.SmoObject;
 
 			Trace.WriteLine(type + ": " + name);
 
-			var output = scr.Script(new[] { urn });
+			var output = scr.Script(new[] { smoObj });
 
 			var sb = new StringBuilder();
 

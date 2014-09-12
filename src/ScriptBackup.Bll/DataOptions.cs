@@ -12,6 +12,7 @@ namespace ScriptBackup.Bll {
 			ServerName = serverName;
 
 			UseDatabase = true;
+			EnforceDependencies = true;
 
 			_scriptOptions = new ScriptingOptions() {
 				AnsiPadding = true,
@@ -28,6 +29,9 @@ namespace ScriptBackup.Bll {
 		public DataOptions(IBackupOptions options)
 			: this(options.ServerName) {
 
+			UseDatabase = options.UseDatabase;
+			EnforceDependencies = options.EnforceDependencies;
+
 			Databases = options.Databases;
 			Tables = options.Tables;
 		}
@@ -35,6 +39,8 @@ namespace ScriptBackup.Bll {
 		public string ServerName { get; set; }
 
 		public bool UseDatabase { get; set; }
+
+		public bool EnforceDependencies { get; set; }
 
 		public IEnumerable<string> Databases { get; set; }
 

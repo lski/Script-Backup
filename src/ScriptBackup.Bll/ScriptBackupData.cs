@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
@@ -63,6 +65,10 @@ namespace ScriptBackup.Bll {
 				conn = new ServerConnection(sqlServer);
 
 				var svr = new Server(conn);
+				var walker = new DependencyWalker(svr);
+				var scr = new Scripter(svr) {
+					Options = ops
+				};
 
 				var dbs = ResolveDatabases(svr, databases);
 
@@ -70,17 +76,37 @@ namespace ScriptBackup.Bll {
 
 					ProcessDatabaseScript(db, iterator);
 
-					var tabs = ResolveTables(db, tables);
+					var objects = (ResolveTables(db, tables));
 
-					foreach (Table tbl in tabs) {
+					IEnumerable<SqlSmoObjectMeta> orderedLst = null;
 
-						Trace.WriteLine("Table: " + tbl.Name);
+					if (!Options.EnforceDependencies) {
 
-						var output = tbl.EnumScript(ops);
+						orderedLst = objects.Select(obj => new SqlSmoObjectMeta() {
+							Name = obj.Urn.GetAttribute("Name"),
+							Type = obj.Urn.Type,
+							SmoObject = obj
+						});
 
-						foreach (string st in output) {
-							iterator(st, db.Name, tbl.Name, typeof(Table).Name);
+					} else {
+
+						// Empty so prevents dependency errors
+						if (!objects.Any()) {
+							continue;
 						}
+
+						var tree = scr.DiscoverDependencies(objects.ToArray(), true);
+						var coll = walker.WalkDependencies(tree).ToList();
+
+						orderedLst = coll.Select(dep => new SqlSmoObjectMeta() {
+							Name = dep.Urn.GetAttribute("Name"),
+							Type = dep.Urn.Type,
+							SmoObject = svr.GetSmoObject(dep.Urn)
+						});
+					}
+
+					foreach (var mini in orderedLst) {
+						ProcessScript(scr, db.Name, mini, iterator);
 					}
 				}
 
@@ -90,6 +116,26 @@ namespace ScriptBackup.Bll {
 					conn.Disconnect();
 				}
 			}
+		}
+
+		private void ProcessScript(Scripter scr, string db, SqlSmoObjectMeta data, Action<string, string, string, string> iterator) {
+
+			var name = data.Name;		// .SmoObject.Urn.GetAttribute("Name");
+			var type = data.Type;		// .SmoObject.Urn.Type;
+			var smoObj = data.SmoObject;
+
+			Trace.WriteLine(type + ": " + name);
+
+			var output = scr.EnumScript(new[] { smoObj });
+
+			var sb = new StringBuilder();
+
+			foreach (string st in output) {
+				sb.AppendLine(st)
+					.AppendLine("GO");
+			}
+
+			iterator(sb.ToString(), db, name, type);
 		}
 
 		private void ProcessDatabaseScript(Database db, Action<string, string, string, string> iterator) {
