@@ -27,5 +27,42 @@ namespace ScriptBackup.Bll {
 
 			return qry;
 		}
+
+		internal ScriptObjectsMeta GenerateObjectsToScript(Server svr, ScriptingOptions ops, bool enforceDependancies, IEnumerable<SqlSmoObject> objects) {
+
+			// Return an empty object if there are no objects, this prevents extra processing and prevents errors on walking dependencies
+			if (!objects.Any()) {
+				return new ScriptObjectsMeta(null, Enumerable.Empty<ScriptObjectMeta>());
+			}
+
+			var walker = new DependencyWalker(svr);
+			var scr = new Scripter(svr) {
+				Options = ops
+			};
+
+			IEnumerable<ScriptObjectMeta> orderedLst = null;
+
+			if (!enforceDependancies) {
+
+				orderedLst = objects.Select(obj => new ScriptObjectMeta() {
+					Name = obj.Urn.GetAttribute("Name"),
+					Type = obj.Urn.Type,
+					SmoObject = obj
+				});
+
+			} else {
+
+				var tree = scr.DiscoverDependencies(objects.ToArray(), true);
+				var coll = walker.WalkDependencies(tree).ToList();
+
+				orderedLst = coll.Select(dep => new ScriptObjectMeta() {
+					Name = dep.Urn.GetAttribute("Name"),
+					Type = dep.Urn.Type,
+					SmoObject = svr.GetSmoObject(dep.Urn)
+				});
+			}
+
+			return new ScriptObjectsMeta(scr, orderedLst);
+		}
 	}
 }

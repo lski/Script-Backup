@@ -65,10 +65,6 @@ namespace ScriptBackup.Bll {
 				conn = new ServerConnection(sqlServer);
 
 				var svr = new Server(conn);
-				var walker = new DependencyWalker(svr);
-				var scr = new Scripter(svr) {
-					Options = ops
-				};
 
 				var dbs = ResolveDatabases(svr, databases);
 
@@ -76,37 +72,10 @@ namespace ScriptBackup.Bll {
 
 					ProcessDatabaseScript(db, iterator);
 
-					var objects = (ResolveTables(db, tables));
+					var scriptData = GenerateObjectsToScript(svr, ops, Options.EnforceDependencies, ResolveTables(db, tables));
 
-					IEnumerable<SqlSmoObjectMeta> orderedLst = null;
-
-					if (!Options.EnforceDependencies) {
-
-						orderedLst = objects.Select(obj => new SqlSmoObjectMeta() {
-							Name = obj.Urn.GetAttribute("Name"),
-							Type = obj.Urn.Type,
-							SmoObject = obj
-						});
-
-					} else {
-
-						// Empty so prevents dependency errors
-						if (!objects.Any()) {
-							continue;
-						}
-
-						var tree = scr.DiscoverDependencies(objects.ToArray(), true);
-						var coll = walker.WalkDependencies(tree).ToList();
-
-						orderedLst = coll.Select(dep => new SqlSmoObjectMeta() {
-							Name = dep.Urn.GetAttribute("Name"),
-							Type = dep.Urn.Type,
-							SmoObject = svr.GetSmoObject(dep.Urn)
-						});
-					}
-
-					foreach (var mini in orderedLst) {
-						ProcessScript(scr, db.Name, mini, iterator);
+					foreach (var mini in scriptData.Objects) {
+						ProcessScript(scriptData.Scripter, db.Name, mini, iterator);
 					}
 				}
 
@@ -118,7 +87,7 @@ namespace ScriptBackup.Bll {
 			}
 		}
 
-		private void ProcessScript(Scripter scr, string db, SqlSmoObjectMeta data, Action<string, string, string, string> iterator) {
+		private void ProcessScript(Scripter scr, string db, ScriptObjectMeta data, Action<string, string, string, string> iterator) {
 
 			var name = data.Name;		// .SmoObject.Urn.GetAttribute("Name");
 			var type = data.Type;		// .SmoObject.Urn.Type;

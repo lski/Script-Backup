@@ -72,7 +72,8 @@
     <Compile Include="ScriptBackupBase.cs" />
     <Compile Include="ScriptBackupData.cs" />
     <Compile Include="ScriptBackupSchema.cs" />
-    <Compile Include="SqlSmoObjectMeta.cs" />
+    <Compile Include="ScriptObjectsMeta.cs" />
+    <Compile Include="ScriptObjectMeta.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

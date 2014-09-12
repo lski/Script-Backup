@@ -2,7 +2,7 @@
 
 namespace ScriptBackup.Bll {
 
-	internal class SqlSmoObjectMeta {
+	internal class ScriptObjectMeta {
 
 		public string Name { get; set; }
 
