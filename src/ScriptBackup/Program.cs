@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using ScriptBackup.Bll;
 
-namespace ScriptBackup.Bll {
+namespace ScriptBackup {
 
 	internal class Program {
 
@@ -20,39 +22,47 @@ namespace ScriptBackup.Bll {
 			dbs = (from arg in args where arg.StartsWith("-dbs:") select arg.Replace("-dbs:", "").Split(',')).FirstOrDefault();
 			silent = args.Contains("-silent");
 
-			if (String.IsNullOrEmpty(server)) {
-				WriteMultipleLines("The server argument is required");
-				return;
+			try {
+
+				if (String.IsNullOrEmpty(server)) {
+					WriteMultipleLines("The server argument is required");
+					return;
+				}
+
+				if (String.IsNullOrEmpty(output)) {
+					WriteMultipleLines("The output argument is required");
+					return;
+				}
+
+				Console.WriteLine("Running...");
+
+				switch (type) {
+					case "all":
+						All(server, output, dbs);
+						break;
+
+					case "schema":
+						Schema(server, output, dbs);
+						break;
+
+					case "data":
+						Data(server, output, dbs);
+						break;
+				}
+
 			}
+			finally {
 
-			if (String.IsNullOrEmpty(output)) {
-				WriteMultipleLines("The output argument is required");
-				return;
-			}
-
-			switch (type) {
-				case "all":
-					All(server, output, dbs);
-					break;
-
-				case "schema":
-					Schema(server, output, dbs);
-					break;
-
-				case "data":
-					Data(server, output, dbs);
-					break;
-			}
-
-			if (!silent) {
-				WriteMultipleLines("", "Press any key to continue");
-				Console.ReadLine();
+				if (!silent) {
+					WriteMultipleLines("", "Press any key to continue");
+					Console.ReadLine();
+				}
 			}
 		}
 
 		private static void All(string server, string output, IEnumerable<string> dbs) {
 
-			var backup = new ScriptBackup(new SchemaOptions(server) {
+			var backup = new ScriptBackupAll(new SchemaOptions(server) {
 				ScriptPartitionFunctions = true,
 				ScriptPartitionSchemes = true,
 				Databases = dbs

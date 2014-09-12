@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 using System;
@@ -73,7 +74,7 @@ namespace ScriptBackup.Bll {
 
 					foreach (Table tbl in tabs) {
 
-						Console.WriteLine("Table: " + tbl.Name);
+						Trace.WriteLine("Table: " + tbl.Name);
 
 						var output = tbl.EnumScript(ops);
 
@@ -93,7 +94,7 @@ namespace ScriptBackup.Bll {
 
 		private void ProcessDatabaseScript(Database db, Action<string, string, string, string> iterator) {
 
-			Console.WriteLine("Database: " + db.Name);
+			Trace.WriteLine("Database: " + db.Name);
 
 			var ops = _options;
 			var sb = new StringBuilder();

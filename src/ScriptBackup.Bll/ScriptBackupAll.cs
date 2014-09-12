@@ -3,18 +3,18 @@ using System.Text.RegularExpressions;
 
 namespace ScriptBackup.Bll {
 
-	public class ScriptBackup : IScriptBackup {
+	public class ScriptBackupAll : IScriptBackup {
 
 		internal const int FormatPositionStartTime = 4;
 
 		private readonly ScriptBackupSchema _scriptBackupSchema;
 		private readonly ScriptBackupData _scriptBackupData;
 
-		public ScriptBackup(string serverName)
+		public ScriptBackupAll(string serverName)
 			: this(new SchemaOptions(serverName)) {
 		}
 
-		public ScriptBackup(SchemaOptions options) {
+		public ScriptBackupAll(SchemaOptions options) {
 
 			_scriptBackupSchema = new ScriptBackupSchema(options);
 			_scriptBackupData = new ScriptBackupData(new DataOptions(options));

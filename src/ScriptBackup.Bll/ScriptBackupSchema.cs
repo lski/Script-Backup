@@ -1,4 +1,5 @@
-﻿using Microsoft.SqlServer.Management.Common;
+﻿using System.Diagnostics;
+using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 using System;
 using System.Collections.Generic;
@@ -146,7 +147,7 @@ namespace ScriptBackup.Bll {
 			var type = data.Type;		// .SmoObject.Urn.Type;
 			var urn = data.SmoObject;
 
-			Console.WriteLine(type + ": " + name);
+			Trace.WriteLine(type + ": " + name);
 
 			var output = scr.Script(new[] { urn });
 
@@ -162,7 +163,7 @@ namespace ScriptBackup.Bll {
 
 		private void ProcessDatabaseScript(Database db, Action<string, string, string, string> iterator) {
 
-			Console.WriteLine("Database: " + db.Name);
+			Trace.WriteLine("Database: " + db.Name);
 
 			var ops = _options;
 			var sb = new StringBuilder();
