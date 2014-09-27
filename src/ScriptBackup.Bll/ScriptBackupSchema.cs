@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System.Data.SqlClient;
+using System.Diagnostics;
+using System.Security.Cryptography;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 using System;
@@ -35,42 +37,41 @@ namespace ScriptBackup.Bll {
 		public void Export(string outputFile) {
 
 			var startTime = DateTime.Now;
-			var svr = _options.ServerName;
 
-			Process((output, db, objectName, objectType) => {
+			Process((output) => {
 
-				var file = new FileInfo(String.Format(outputFile, svr, db, objectName, objectType, startTime, OutputType));
+				var file = new FileInfo(String.Format(outputFile, output.Server, output.Database, output.Name, output.Type, startTime, OutputType));
 
 				if (file.Directory != null && !file.Directory.Exists) {
 					file.Directory.Create();
 				}
 
 				using (var fs = file.AppendText()) {
-					fs.WriteLine(output);
+					fs.WriteLine(output.Output);
 				}
 			});
 		}
 
-		public void Process(Action<string, string, string, string> iterator) {
+		public void Process(Action<ProcessObjectOutput> iterator) {
 
-			var sqlServer = Options.ServerName;
+			var connectionString = Options.ConnectionString;
 			var ops = _options.ScriptingOptions;
 			var databases = _options.Databases;
 			var tables = _options.Tables;
 
-			ServerConnection conn = null;
+			ServerConnection svrConn = null;
 
 			try {
 
-				conn = new ServerConnection(sqlServer);
+				svrConn = new ServerConnection(new SqlConnection(connectionString));
 
-				var svr = new Server(conn);
+				var svr = new Server(svrConn);
 
 				var dbs = ResolveDatabases(svr, databases);
 
 				foreach (Database db in dbs) {
 
-					ProcessDatabaseScript(db, iterator);
+					ProcessDatabaseScript(svr.Name, db, iterator);
 
 					var objects = new List<SqlSmoObject>();
 
@@ -101,18 +102,18 @@ namespace ScriptBackup.Bll {
 					var scriptData = GenerateObjectsToScript(svr, ops, Options.EnforceDependencies, objects);
 
 					foreach (var mini in scriptData.Objects) {
-						ProcessScript(scriptData.Scripter, db.Name, mini, iterator);
+						ProcessScript(scriptData.Scripter, svr.Name, db.Name, mini, iterator);
 					}
 				}
 			} finally {
 
-				if (conn != null) {
-					conn.Disconnect();
+				if (svrConn != null) {
+					svrConn.Disconnect();
 				}
 			}
 		}
 
-		private void ProcessScript(Scripter scr, string db, ScriptObjectMeta data, Action<string, string, string, string> iterator) {
+		private void ProcessScript(Scripter scr, string svr, string db, ScriptObjectMeta data, Action<ProcessObjectOutput> iterator) {
 
 			var name = data.Name;		// .SmoObject.Urn.GetAttribute("Name");
 			var type = data.Type;		// .SmoObject.Urn.Type;
@@ -129,10 +130,10 @@ namespace ScriptBackup.Bll {
 					.AppendLine("GO");
 			}
 
-			iterator(sb.ToString(), db, name, type);
+			iterator(new ProcessObjectOutput(sb.ToString(), svr, db, name, type));
 		}
 
-		private void ProcessDatabaseScript(Database db, Action<string, string, string, string> iterator) {
+		private void ProcessDatabaseScript(string svr, Database db, Action<ProcessObjectOutput> iterator) {
 
 			Trace.WriteLine("Database: " + db.Name);
 
@@ -166,7 +167,7 @@ namespace ScriptBackup.Bll {
 			}
 
 			if (sb.Length > 0) {
-				iterator(sb.ToString(), db.Name, db.Name, typeof(Database).Name);
+				iterator(new ProcessObjectOutput(sb.ToString(), svr, db.Name, db.Name, typeof(Database).Name));
 			}
 		}
 

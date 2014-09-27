@@ -4,7 +4,7 @@ namespace ScriptBackup.Bll {
 
 	public interface IBackupOptions {
 
-		string ServerName { get; set; }
+		string ConnectionString { get; set; }
 
 		bool UseDatabase { get; set; }
 

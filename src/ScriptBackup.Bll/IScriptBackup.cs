@@ -6,6 +6,6 @@ namespace ScriptBackup.Bll {
 
 		void Export(string outputFile);
 
-		void Process(Action<string, string, string, string> iterator);
+		void Process(Action<ProcessObjectOutput> iterator);
 	}
 }

@@ -66,6 +66,7 @@
     <Compile Include="DataOptions.cs" />
     <Compile Include="IBackupOptions.cs" />
     <Compile Include="IScriptBackup.cs" />
+    <Compile Include="ProcessObjectOutput.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SchemaOptions.cs" />
     <Compile Include="ScriptBackupAll.cs" />

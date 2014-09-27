@@ -13,9 +13,9 @@ namespace ScriptBackup.Bll {
 
 		private readonly ScriptingOptions _scriptOptions;
 
-		public SchemaOptions(string serverName) {
+		public SchemaOptions(string connectionString) {
 
-			ServerName = serverName;
+			ConnectionString = connectionString;
 			CreateDatabase = CreateDatabaseType.mini;
 			UseDatabase = true;
 			ScriptTables = true;
@@ -54,7 +54,7 @@ namespace ScriptBackup.Bll {
 
 		public bool UseDatabase { get; set; }
 
-		public string ServerName { get; set; }
+		public string ConnectionString { get; set; }
 
 		public CreateDatabaseType CreateDatabase { get; set; }
 

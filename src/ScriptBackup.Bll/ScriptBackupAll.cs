@@ -31,7 +31,7 @@ namespace ScriptBackup.Bll {
 			_scriptBackupData.Export(outputFile);
 		}
 
-		public void Process(Action<string, string, string, string> iterator) {
+		public void Process(Action<ProcessObjectOutput> iterator) {
 
 			_scriptBackupSchema.Process(iterator);
 			_scriptBackupData.Process(iterator);

@@ -1,8 +1,7 @@
-﻿using System;
+﻿using ScriptBackup.Bll;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using ScriptBackup.Bll;
 
 namespace ScriptBackup {
 
@@ -11,22 +10,28 @@ namespace ScriptBackup {
 		private static void Main(string[] args) {
 
 			string type = null;
-			string server = null;
+			string connectionString = null;
 			string output = null;
 			string[] dbs = null;
 			bool silent = false;
 
 			type = (from arg in args where arg.StartsWith("-type:") select arg.Replace("-type:", "")).FirstOrDefault() ?? "all";
-			server = (from arg in args where arg.StartsWith("-server:") select arg.Replace("-server:", "")).FirstOrDefault();
 			output = (from arg in args where arg.StartsWith("-output:") select arg.Replace("-output:", "")).FirstOrDefault();
+			connectionString = (from arg in args where arg.StartsWith("-connection:") select arg.Replace("-connection:", "")).FirstOrDefault();
 			dbs = (from arg in args where arg.StartsWith("-dbs:") select arg.Replace("-dbs:", "").Split(',')).FirstOrDefault();
 			silent = args.Contains("-silent");
 
 			try {
 
-				if (String.IsNullOrEmpty(server)) {
-					WriteMultipleLines("The server argument is required");
-					return;
+				if (String.IsNullOrEmpty(connectionString)) {
+
+					connectionString = CreateConnectionString((from arg in args where arg.StartsWith("-server:") select arg.Replace("-server:", "")).FirstOrDefault());
+
+					// Check again if not set from the server name either
+					if (String.IsNullOrEmpty(connectionString)) {
+						WriteMultipleLines("The connection string or server argument is required");
+						return;
+					}
 				}
 
 				if (String.IsNullOrEmpty(output)) {
@@ -38,20 +43,18 @@ namespace ScriptBackup {
 
 				switch (type) {
 					case "all":
-						All(server, output, dbs);
+						All(connectionString, output, dbs);
 						break;
 
 					case "schema":
-						Schema(server, output, dbs);
+						Schema(connectionString, output, dbs);
 						break;
 
 					case "data":
-						Data(server, output, dbs);
+						Data(connectionString, output, dbs);
 						break;
 				}
-
-			}
-			finally {
+			} finally {
 
 				if (!silent) {
 					WriteMultipleLines("", "Press any key to continue");
@@ -96,6 +99,15 @@ namespace ScriptBackup {
 			foreach (var mess in messages) {
 				Console.WriteLine(mess);
 			}
+		}
+
+		private static string CreateConnectionString(string server) {
+
+			if (String.IsNullOrEmpty(server)) {
+				return null;
+			}
+
+			return "Server=" + server + ";Trusted_Connection=True;";
 		}
 	}
 }

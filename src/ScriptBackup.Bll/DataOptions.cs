@@ -7,9 +7,9 @@ namespace ScriptBackup.Bll {
 
 		private readonly ScriptingOptions _scriptOptions;
 
-		public DataOptions(string serverName) {
+		public DataOptions(string connectionString) {
 
-			ServerName = serverName;
+			ConnectionString = connectionString;
 
 			UseDatabase = true;
 			EnforceDependencies = true;
@@ -27,7 +27,7 @@ namespace ScriptBackup.Bll {
 		}
 
 		public DataOptions(IBackupOptions options)
-			: this(options.ServerName) {
+			: this(options.ConnectionString) {
 
 			UseDatabase = options.UseDatabase;
 			EnforceDependencies = options.EnforceDependencies;
@@ -36,7 +36,7 @@ namespace ScriptBackup.Bll {
 			Tables = options.Tables;
 		}
 
-		public string ServerName { get; set; }
+		public string ConnectionString { get; set; }
 
 		public bool UseDatabase { get; set; }
 
