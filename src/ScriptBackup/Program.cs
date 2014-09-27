@@ -1,4 +1,6 @@
-﻿using ScriptBackup.Bll;
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
+using ScriptBackup.Bll;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,8 +20,12 @@ namespace ScriptBackup {
 			type = (from arg in args where arg.StartsWith("-type:") select arg.Replace("-type:", "")).FirstOrDefault() ?? "all";
 			output = (from arg in args where arg.StartsWith("-output:") select arg.Replace("-output:", "")).FirstOrDefault();
 			connectionString = (from arg in args where arg.StartsWith("-connection:") select arg.Replace("-connection:", "")).FirstOrDefault();
-			dbs = (from arg in args where arg.StartsWith("-dbs:") select arg.Replace("-dbs:", "").Split(',')).FirstOrDefault();
+			dbs = (from arg in args where arg.StartsWith("-dbs:") select Regex.Replace(arg, "(-dbs:| )", "").Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)).FirstOrDefault();
 			silent = args.Contains("-silent");
+
+			if (!silent) {
+				Trace.Listeners.Add(new ConsoleTraceListener());
+			}
 
 			try {
 
@@ -39,8 +45,11 @@ namespace ScriptBackup {
 					return;
 				}
 
-				Console.WriteLine("Running...");
-
+				// Only show if the rest of the output is hidden
+				if (silent) {
+					Console.WriteLine("Running...");
+				}
+				
 				switch (type) {
 					case "all":
 						All(connectionString, output, dbs);
@@ -54,7 +63,13 @@ namespace ScriptBackup {
 						Data(connectionString, output, dbs);
 						break;
 				}
-			} finally {
+			}
+			catch (Exception ex) {
+
+				WriteMultipleLines("Sorry an error occurred", ex.Message);
+				Console.ReadLine();
+			}
+			finally {
 
 				if (!silent) {
 					WriteMultipleLines("", "Press any key to continue");

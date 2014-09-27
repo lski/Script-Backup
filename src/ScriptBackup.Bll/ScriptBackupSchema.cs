@@ -61,9 +61,15 @@ namespace ScriptBackup.Bll {
 
 			ServerConnection svrConn = null;
 
+			var sqlConn = GetConnection(connectionString);
+
+			Trace.Write("Running ");
+			Trace.Write(OutputType);
+			Trace.WriteLine(":");
+
 			try {
 
-				svrConn = new ServerConnection(new SqlConnection(connectionString));
+				svrConn = new ServerConnection(sqlConn);
 
 				var svr = new Server(svrConn);
 
@@ -105,7 +111,15 @@ namespace ScriptBackup.Bll {
 						ProcessScript(scriptData.Scripter, svr.Name, db.Name, mini, iterator);
 					}
 				}
-			} finally {
+			}
+			catch (Exception ex) {
+				
+				Trace.WriteLine("Script error:");
+				Trace.WriteLine(ex.Message);
+
+				throw new Exception("Script error");
+			}
+			finally {
 
 				if (svrConn != null) {
 					svrConn.Disconnect();

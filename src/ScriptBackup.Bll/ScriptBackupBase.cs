@@ -1,4 +1,7 @@
-﻿using Microsoft.SqlServer.Management.Smo;
+﻿using System;
+using System.Data.SqlClient;
+using System.Diagnostics;
+using Microsoft.SqlServer.Management.Smo;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -63,6 +66,32 @@ namespace ScriptBackup.Bll {
 			}
 
 			return new ScriptObjectsMeta(scr, orderedLst);
+		}
+
+		/// <summary>
+		/// If a connection is not returned the test connection failed
+		/// </summary>
+		/// <returns></returns>
+		internal SqlConnection GetConnection(string connectionString) {
+
+			SqlConnection conn;
+
+			try {
+
+				conn = new SqlConnection(connectionString);
+
+				conn.Open();
+				conn.Close();
+			}
+			catch (Exception ex) {
+				
+				Trace.WriteLine("Connection failed:");
+				Trace.WriteLine(ex.Message);
+
+				throw new Exception("Connection failed");
+			}
+
+			return conn;
 		}
 	}
 }
