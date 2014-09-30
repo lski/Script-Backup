@@ -17,21 +17,48 @@ I decided to build this console application, where you could supply a list of op
 
 #### Options
 
-- -connection or -server: *__required__*
-  - -connection: The connection string used to connect to the server. Note: The initial database is not required in the connection string.
-  - -server: Instead of a complete connection string you can just supply a server name, although this requires the server to be accessible as a trusted connection. Note: If you supply both connection and server, connection is used.
-  - -output: *__required__* The full file path you want the output to be stored in, there are several formatting choices for the user to split the file up, simply replace the following placeholders, although each of the options are entirely optional.
+- -connection (or -server):
+
+  The connection information to the server you want to script *__Required__*
+
+  - -connection: A connection string used to connect to the server. Note: The initial database is not required in the connection string.
+
+  - -server: Instead of a complete connection string you can just supply a server name. Note: If you supply both connection and server arguments, connection is used and this requires the server to be accessible as a trusted connection.
+
+
+- -output:
+
+  The full file path you want the output to be stored in, with optional placeholders. Simply replace the following placeholders, although each of the options are entirely optional. *__Required__*
+
   The following is replaced by:
-    - {0} The name of the server
-    - {1} The name of the currently executing database
-    - {2} The name of the currently executing object e.g. table name
-    - {3} The type of the currently executing object e.g. table
-    - {4} The start time of the process e.g. 2014-01-01
-    - {5} The current type of output i.e. whether its a 'schema' output or 'data' output
-- -dbs: A comma seperated list of databases on the server you want to output. If the database is not found on the server it will simply be ignored. If not supplied it will run on all databases on the server.
-- -tables: A comma seperated list of tables in a database you want to output
-- -silent: Basically does not output the tracing information to the console and then closes without asking for input
-- -type: What you actually want to output, the default is 'all', your options are:
+    - {0} (string) The name of the server
+    - {1} (string) The name of the currently executing database
+    - {2} (string) The name of the currently executing object e.g. table name
+    - {3} (string) The type of the currently executing object e.g. table
+    - {4} (datetime) The start time of the process e.g. 2014-01-01
+    - {5} (string) The current type of output i.e. whether its a 'schema' output or 'data' output
+
+  Note the format can of the datetime can be replaced using the formating options on [MSDN](http://msdn.microsoft.com/en-us/library/8kb3ddd4%28v=vs.110%29.aspx)
+
+- -dbs:
+
+  A comma seperated list of databases on the server you want to output. If the database is not found on the server it will simply be ignored. *__Default:__ all databases*
+
+
+- -tables:
+
+  A comma seperated list of tables in a database you want to output. *__Default:__ all tables*
+
+
+- -silent
+
+  If present prevents output of tracing information and then closes without asking for input *__Default:__ show all output*
+
+
+- -type: *__Default:__ all*
+
+  What you actually want to output, options:
+
   - schema
   - data
   - all
