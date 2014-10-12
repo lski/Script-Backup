@@ -74,7 +74,6 @@ scriptbackup.exe -type:all "-output:c:\scripts\{0}\{1}\{5} {4:yyyy-MM-dd}.sql" "
 - On Sql Server 2000 the server itself does not always give a reliable report as to dependencies in views so can output the views in a slightly incorrect order. The script is complete, but might require some slight re-ordering.
 
 - I am aware that the system doesnt currently work with azure databases, although should not be too difficult to give it support
-- 
 
 #### Warning
 
