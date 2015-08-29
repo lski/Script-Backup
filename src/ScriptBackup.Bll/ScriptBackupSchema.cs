@@ -112,6 +112,13 @@ namespace ScriptBackup.Bll {
 					}
 				}
 			}
+			catch(ConnectionFailureException cex){
+
+				Trace.WriteLine("Connection Error:");
+				Trace.WriteLine("\t" + cex.Message);
+
+				throw cex;
+			}
 			catch (Exception ex) {
 				
 				Trace.WriteLine("Script error:");

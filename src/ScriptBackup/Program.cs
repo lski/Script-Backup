@@ -66,8 +66,7 @@ namespace ScriptBackup {
 			}
 			catch (Exception ex) {
 
-				WriteMultipleLines("Sorry an error occurred", ex.Message);
-				Console.ReadLine();
+				WriteMultipleLines("Sorry an error occurred", "\t" + ex.Message);
 			}
 			finally {
 
